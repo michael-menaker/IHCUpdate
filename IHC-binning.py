@@ -47,7 +47,7 @@ class IHCBinning(tk.Frame):
         language = 0
         self.createWidgets()
         self.mainloop()
-        
+
     def createWidgets(self):
         global languageText, language, arraysBinned
         self.startButton = tk.Button(win, text = languageText[language][0], font = ('Helevetica', 12), command = self.binning, bg = "green", height = int(2*scaleY), width = int(24*scaleX))
@@ -90,7 +90,7 @@ class IHCBinning(tk.Frame):
         self.versionLabel = tk.Label(win, text = "Version 1.0", font = ('Helevetica', 12), height = int(2*scaleY), width = int(24*scaleX), relief = 'flat', bg = 'lightgrey')
         self.versionLabel.grid(row = 8, column = 3)
         self.mainloop()
-               
+
     def close():
         win.destroy()
 
@@ -104,11 +104,11 @@ class IHCBinning(tk.Frame):
         self.continueButton["state"] = "disabled"
         self.setupButton["state"] = "normal"
         self.startButton["state"] = "normal"
-        
+
     def updatePort(self, event):
         global serialPort
         serialPort = self.serialCombobox.get()
-        
+
     def updateLanguage(self, event):
         global language
         langString= self.languageCombobox.get()
@@ -119,7 +119,7 @@ class IHCBinning(tk.Frame):
         elif(langString == "French"):
             language = 2
         self.createWidgets()
-            
+
     def serialPorts(self):
         if sys.platform.startswith('win'):
             ports = ['COM%s' % (i + 1) for i in range(256)]
@@ -138,18 +138,18 @@ class IHCBinning(tk.Frame):
             except (OSError, serial.SerialException):
                 pass
         self.serialCombobox["values"] = result
-    
+
     def multimeterSetup(self):
         global inst
         try:
-            inst = ik.Instrument.open_serial(port = serialPort, baud = 115200, vid = None, pid = None, serial_number = None, timeout = 3, write_timeout = 3)        
+            inst = ik.Instrument.open_serial(port = serialPort, baud = 115200, vid = None, pid = None, serial_number = None, timeout = 3, write_timeout = 3)
             inst.terminator = "\r"
         except:
             statusfield = tk.Label(win, text = "Serial failure. Press CONTINUE", font = ('Helevetica', 12), relief = "solid", height = int(2*scaleY), width = int(24*scaleX))
             statusfield.grid(row = 2, column = 1)
             self.continueButton.wait_variable(continueState)
             win.destroy()
-        
+
     def printLabel(self, array_bin, VDC):
         DPI = 203
         label_width = 0.5
@@ -179,7 +179,7 @@ class IHCBinning(tk.Frame):
         label_img.paste(qr_img, box = (int((img_width/2)-30), int(img_height/2)-17))
         label_img.save(filepath)
         os.system("lp -o media=Custom.0.5x0.5in {filepath}".format(filepath=filepath))
-        
+
     def query(self):
         attempts = 3
         global inst
@@ -200,7 +200,7 @@ class IHCBinning(tk.Frame):
                 print("No data available, retrying query. Attempts remaining: " + str(attempts))
                 time.sleep(2)
         return 0
-        
+
     def binArray(self, VDC):
         LSL = 156.37
         USL = 162.07
@@ -213,16 +213,16 @@ class IHCBinning(tk.Frame):
         elif VDC <= LSL + 2*bandwidth:
             array_bin = "N"
         else:
-            array_bin = "H" 
-        return array_bin   
-    
+            array_bin = "H"
+        return array_bin
+
     def parseSerial(self, code):
         #first 4 digits are mm/yy
         return code[4:]
-    
+
     def parseDate(self, code):
         return code[0:4]
-    
+
     def readVDC(self):
         global inst, VDC
         self.VDC = np.float(inst.read().split(',')[0])
@@ -244,7 +244,7 @@ class IHCBinning(tk.Frame):
         statusfield.grid(row = 2, column = 1)
         self.startButton["state"] = "normal"
         self.continueButton["state"] = "disabled"
-        
+
     def binning(self):
         global stopState, arraysBinned, VDC
         startState.set(0)
@@ -283,7 +283,7 @@ class IHCBinning(tk.Frame):
         arrayBin = self.binArray(self.VDC)
         self.previousBinLabel = tk.Label(win, text = languageText[language][8].format(arrayBin = arrayBin), font = ('Helevetica', 12), height = int(2*scaleY), width = int(24*scaleX))
         self.previousBinLabel.grid(row = 6, column = 2)
-        self.printLabel("H", self.VDC)
+        self.printLabel(arrayBin, self.VDC)
         arraysBinned += 1
         DAQC2.setDOUTbit(0,0)#turn relay off
         self.numTestedLabel = tk.Label(win, text = languageText[language][6].format(arraysBinned = arraysBinned), font = ('Helevetica', 12), height = int(2*scaleY), width = int(24*scaleX))
